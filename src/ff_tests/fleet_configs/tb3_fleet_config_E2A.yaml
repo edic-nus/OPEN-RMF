@@ -1,0 +1,73 @@
+
+# FLEET CONFIG =================================================================
+# RMF Fleet parameters
+
+rmf_fleet:
+  name: "tb3"
+  limits:
+    linear: [0.5, 0.75] # velocity, acceleration
+    angular: [0.6, 2.0] # velocity, acceleration
+  profile: # Robot profile is modelled as a circle
+    footprint: 0.3 # radius in m
+    vicinity: 0.5 # radius in m
+  reversible: True # whether robots in this fleet can reverse
+  battery_system:
+    voltage: 12.0 # V
+    capacity: 24.0 # Ahr
+    charging_current: 5.0 # A
+  mechanical_system:
+    mass: 0.2 # kg
+    moment_of_inertia: 0.5 #kgm^2
+    friction_coefficient: 0.22
+  ambient_system:
+    power: 0.0 # W
+  tool_system:
+    power: 0.0 # W
+  tool_sink:
+    power: 0.0 # W
+  ambient_sink:
+    power: 0.0 # W
+  motion_sink:
+    power: 0.0 # W
+  recharge_threshold: 0.10 # Battery level below which robots in this fleet will not operate
+  recharge_soc: 1.0 # Battery level to which robots in this fleet should be charged up to during recharging tasks
+  publish_fleet_state: 10.0 # Publish frequency for fleet state, ensure that it is same as robot_state_update_frequency
+  account_for_battery_drain: False
+  task_capabilities: # Specify the types of RMF Tasks that robots in this fleet are capable of performing
+    loop: True
+    delivery: True
+  # actions: ["some_action_here"]
+  finishing_request: "park" # [park, charge, nothing]
+  responsive_wait: True # Should responsive wait be on/off for the whole fleet by default? False if not specified.
+  robots:
+    tb3:
+      charger: "tb3_charger"
+      responsive_wait: False # Should responsive wait be on/off for this specific robot? Overrides the fleet-wide setting.
+      # For Nav2RobotAdapter
+      navigation_stack: 2
+      init_timeout_sec: 5
+      initial_map: "L1"
+      map_frame: "map"
+      robot_frame: "base_footprint"
+      maps:
+        L1:
+          map_url: "/home/mayukh_ghosh/Documents/ff_tests_ws/src/ff_tests_maps/maps/test_map_E2A/test_map_E2A.yaml"
+      #initial_pose: [22.775204767387464, -12.737057590365996, -0.12]
+
+  robot_state_update_frequency: 10.0 # Hz
+
+
+# TRANSFORM CONFIG =============================================================
+# For computing transforms between Robot and RMF coordinate systems
+
+# Optional
+reference_coordinates:
+  L1:
+    rmf: [[22.775204767387464, -12.737057590365996], [18.311175085465408, -9.39284540344321], [11.037506044862695, -9.333477123653738], [11.14199249522459, -5.136712330008006]]
+    robot: [[0.05081954598426819,-8.223372459411621], [5.670461177825928, -9.506963729858398], [11.511597633361816, -8.870981216430664], [12.527925491333008, -13.26319408416748]]
+    #robot: [[0,0], [2.4527125821455513, 5.24380478856538], [ 1.7984328268822067, 12.203243369305861], [6.2575303807977685, 12.385085615206902]]
+
+plugins:
+  hello_world:
+    module: "free_fleet_examples.actions.hello_world"
+    actions: ["hello_world", "delayed_hello_world"]

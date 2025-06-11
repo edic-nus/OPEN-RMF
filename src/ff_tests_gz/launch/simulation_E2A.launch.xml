@@ -1,0 +1,49 @@
+<?xml version='1.0' ?>
+
+<launch>
+  <arg name="map_package" default="ff_tests_maps" description="Name of the map package" />
+  <arg name="map_name" description="Name of the ff_tests map to simulate" />
+  <arg name="use_crowdsim" default='0'/>
+  <arg name="gazebo_version" default='8'/>
+  <arg name="sim_update_rate" default='100'/>
+  <arg name="bridge_config" default="$(find-pkg-share turtlebot3_gazebo)/params/turtlebot3_burger_bridge.yaml" />
+  <arg name="use_sim_time" default="true" />
+  <arg name="frame_prefix" default="" />
+  <arg name="robot_model" default="$(env TURTLEBOT3_MODEL)" />
+  <arg name="urdf_path" default="$(find-pkg-share turtlebot3_gazebo)/urdf/turtlebot3_$(var robot_model).urdf" />
+
+  <let name="world_path" value="$(find-pkg-share $(var map_package))/maps/$(var map_name)/$(var map_name).world" />
+  <let name="model_path" value="$(find-pkg-share $(var map_package))/maps/$(var map_name)/models:$(find-pkg-share $(var map_package))/maps/$(var map_name)/models:$(find-pkg-share rmf_demos_assets)/models:$(env HOME)/.gazebo/models:$(env HOME)/turtlebot3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models" />
+  <let name="plugin_path" value="$(find-pkg-prefix rmf_robot_sim_gz_plugins)/lib/rmf_robot_sim_gz_plugins:$(find-pkg-prefix rmf_building_sim_gz_plugins)/lib/rmf_building_sim_gz_plugins" />
+
+  <!-- Use crowd sim if `use_crowdsim` is true-->
+  <let name="menge_resource_path" if="$(var use_crowdsim)" value="$(find-pkg-share $(var map_package))/maps/$(var map_name)/config_resource"/>
+  <let name="menge_resource_path" unless="$(var use_crowdsim)" value="" />
+
+  <let name="gz_headless" if="$(var headless)" value="-s"/>
+  <let name="gz_headless" unless="$(var headless)" value="" />
+
+  <executable cmd="gz sim --force-version $(var gazebo_version) $(var gz_headless) -r -v 3 $(var world_path)" output="both">
+    <env name="GZ_SIM_RESOURCE_PATH" value="$(var model_path):$(var world_path):$(env HOME)/turtlebot3_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models>" />
+    <env name="GZ_SIM_SYSTEM_PLUGIN_PATH" value="$(var plugin_path)"/>
+    <env name="GZ_GUI_PLUGIN_PATH" value="$(var plugin_path)"/>
+    <env name="MENGE_RESOURCE_PATH" value="$(var menge_resource_path)"/>
+  </executable>
+
+  <node pkg="ros_gz_bridge" exec="parameter_bridge" output="screen">
+    <param name="config_file" value="$(var bridge_config)" />
+  </node>
+
+  <include file="$(find-pkg-share turtlebot3_gazebo)/launch/robot_state_publisher.launch.py">
+    <arg name="use_sim_time" value="$(var use_sim_time)" />
+
+    <!-- <param name="robot_description" value="$(command 'cat $(var urdf_path)')" />
+    <param name="frame_prefix" value="$(var frame_prefix)/" /> -->
+  </include>
+  <!--
+  <include file="$(find-pkg-share turtlebot3_gazebo)/launch/spawn_turtlebot3.launch.py">
+    <arg name="x_pose" value="529.01999999999998"/>
+    <arg name="y_pose" value="295.85500000000002"/>
+  </include>
+  -->
+</launch>

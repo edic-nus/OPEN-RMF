@@ -1,0 +1,52 @@
+coordinate_system: reference_image
+crowd_sim:
+  agent_groups:
+    - {agents_name: [""], agents_number: 1, group_id: 0, profile_selector: external_agent, state_selector: external_static, x: 0, y: 0}
+  agent_profiles:
+    - {ORCA_tau: 1, ORCA_tauObst: 0.40000000000000002, class: 1, max_accel: 0, max_angle_vel: 0, max_neighbors: 10, max_speed: 0, name: external_agent, neighbor_dist: 5, obstacle_set: 1, pref_speed: 0, r: 0.25}
+  enable: 0
+  goal_sets: []
+  model_types: []
+  obstacle_set: {class: 1, file_name: L1_navmesh.nav, type: nav_mesh}
+  states:
+    - {final: 1, goal_set: -1, name: external_static, navmesh_file_name: ""}
+  transitions: []
+  update_time_step: 0.10000000000000001
+graphs:
+  {}
+levels:
+  L1:
+    drawing:
+      filename: ../../../../../home.png
+    elevation: 0
+    floors:
+      - parameters: {ceiling_scale: [3, 1], ceiling_texture: [1, blue_linoleum], indoor: [2, 0], texture_name: [1, blue_linoleum], texture_rotation: [3, 0], texture_scale: [3, 1]}
+        vertices: [5, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6]
+    lanes:
+      - [0, 1, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [1, 2, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [2, 3, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [3, 4, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+    layers:
+      {}
+    measurements:
+      - [6, 7, {distance: [3, 6]}]
+    vertices:
+      - [49.286000000000001, 115.904, 0, tb3_charger, {is_charger: [4, true], is_holding_point: [4, true]}]
+      - [201.00200000000001, 113.938, 0, ""]
+      - [191.172, 88.052000000000007, 0, ""]
+      - [214.49600000000001, 78.204999999999998, 0, ""]
+      - [213.43600000000001, 39.923999999999999, 0, goal, {is_holding_point: [4, true]}]
+      - [38.383000000000003, 105.574, 0, ""]
+      - [37.143000000000001, 128.37700000000001, 0, ""]
+      - [184.84200000000001, 126.77200000000001, 0, ""]
+      - [212.886, 130.38999999999999, 0, ""]
+      - [211.077, 91.188999999999993, 0, ""]
+      - [225.25, 89.078000000000003, 0, ""]
+      - [222.83699999999999, 22.736999999999998, 0, ""]
+      - [202.33199999999999, 23.943000000000001, 0, ""]
+      - [202.33199999999999, 60.128999999999998, 0, ""]
+      - [145.339, 63.145000000000003, 0, ""]
+      - [146.84700000000001, 99.632000000000005, 0, ""]
+lifts: {}
+name: home
