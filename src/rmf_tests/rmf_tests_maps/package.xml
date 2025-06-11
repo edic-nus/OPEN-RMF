@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rmf_tests_maps</name>
+  <version>2.4.0</version>
+  <description>A package containing test maps for rmf implementation in EDIC</description>
+  <maintainer email="mayukh.ghosh@u.nus.edu">Mayukh Ghosh</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>rmf_building_map_tools</buildtool_depend>
+  <buildtool_depend>ros2run</buildtool_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
