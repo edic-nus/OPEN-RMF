@@ -6,14 +6,13 @@
 
 `zenohd` (on different ros domain)
 
-`zenoh-bridge-ros2dds -c /PATH/TO/WORKSPACE/src
-/ff_tests/zenoh_configs/tb3_client_zenoh_config.json5
+`zenoh-bridge-ros2dds -c /PATH/TO/WORKSPACE/src/ff_tests/zenoh_configs/tb3_client_zenoh_config.json5`
 
 `ros2 launch ff_tests tb3_home_rmf_common.launch.xml` (on different ros domain)
 
 `ros2 launch ff_tests tb3_home_fleet_adapter.launch.xml`  (on different ros domain) 
 
-ros2 run rmf_demos_tasks dispatch_patrol   -p goal tb3_charger   -n 1   -st 0 (on different ros_domain_id)
+`ros2 run rmf_demos_tasks dispatch_patrol   -p goal tb3_charger   -n 1   -st 0` (on different ros_domain_id)
 
 **Full set of commands to launch Gazebo Sim of E2A with Turtlebot3 and Free Fleet Adapter:**
 
