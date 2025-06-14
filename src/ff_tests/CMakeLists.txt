@@ -15,8 +15,8 @@ install(DIRECTORY
 )
 
 install(DIRECTORY
-  params/
-  DESTINATION share/${PROJECT_NAME}/params
+  zenoh_configs/
+  DESTINATION share/${PROJECT_NAME}/zenoh_configs
 )
 
 ament_package()
