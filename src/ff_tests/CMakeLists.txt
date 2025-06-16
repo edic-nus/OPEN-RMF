@@ -14,9 +14,4 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}/fleet_configs
 )
 
-install(DIRECTORY
-  params/
-  DESTINATION share/${PROJECT_NAME}/params
-)
-
 ament_package()

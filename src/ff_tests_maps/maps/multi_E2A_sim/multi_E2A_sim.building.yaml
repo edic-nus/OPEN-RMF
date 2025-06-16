@@ -1,7 +1,7 @@
 coordinate_system: reference_image
 crowd_sim:
   agent_groups:
-    - {agents_name: [tb3], agents_number: 1, group_id: 0, profile_selector: external_agent, state_selector: external_static, x: 0, y: 0}
+    - {agents_name: [], agents_number: 0, group_id: 0, profile_selector: external_agent, state_selector: external_static, x: 0, y: 0}
   agent_profiles:
     - {ORCA_tau: 1, ORCA_tauObst: 0.40000000000000002, class: 1, max_accel: 0, max_angle_vel: 0, max_neighbors: 10, max_speed: 0, name: external_agent, neighbor_dist: 5, obstacle_set: 1, pref_speed: 0, r: 0.25}
   enable: 0
@@ -160,12 +160,12 @@ levels:
       - [258.80500000000001, 119.315, 0, tb3_charger, {is_charger: [4, true], is_parking_spot: [4, true]}]
       - [255.05799999999999, 465.67000000000002, 0, ""]
       - [499.65499999999997, 495.78899999999999, 0, ""]
-      - [529.01999999999998, 295.85500000000002, 0, studio2, {spawn_robot_name: [1, tb3], spawn_robot_type: [1, turtlebot3_burger]}]
+      - [529.01999999999998, 295.85500000000002, 0, studio2]
       - [422.73099999999999, 509.33499999999998, 0, ""]
       - [423.35599999999999, 505.14800000000002, 0, ""]
       - [429.851, 466.66699999999997, 0, ""]
       - [390.79899999999998, 480.42000000000002, 0, ""]
-      - [365.12400000000002, 650.68100000000004, 0, studio3]
+      - [365.12400000000002, 650.68100000000004, 0, studio3, {is_charger: [4, true], is_parking_spot: [4, true]}]
       - [421.60300000000001, 289.50700000000001, 0, ""]
     walls:
       - [15, 16, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
@@ -243,4 +243,4 @@ levels:
       - [99, 100, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
       - [24, 101, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
 lifts: {}
-name: test_map_E2A
+name: multi_E2A_sim
