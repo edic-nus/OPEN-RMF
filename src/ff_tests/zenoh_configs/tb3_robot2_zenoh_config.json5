@@ -1,0 +1,27 @@
+{
+    plugins: {
+      ros2dds: {
+        namespace: "/tb3_2",
+        allow: {
+          publishers: [".*/tf", ".*/battery_state"],
+          subscribers: [],
+          service_servers: [],
+          service_clients: [],
+          action_servers: [".*/navigate_to_pose"],
+          action_clients: [],
+        },
+      },
+    },
+    mode: "client",
+    // connect: {
+    //   endpoints: [
+    //     // "<proto>/<ip>:<port>"
+    //   ]
+    // },
+    // listen: {
+    //   endpoints: [
+    //     // "<proto>/<ip>:<port>"
+    //   ]
+    // },
+  }
+  
