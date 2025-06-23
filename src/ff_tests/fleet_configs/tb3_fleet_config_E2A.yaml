@@ -51,7 +51,7 @@ rmf_fleet:
       robot_frame: "base_footprint"
       maps:
         L1:
-          map_url: "/home/mayukh_ghosh/Documents/ff_tests_ws/src/ff_tests_maps/maps/test_map_E2A/test_map_E2A.yaml"
+          map_url: "/home/edic/ff_ws_tests/src/ff_tests_maps/maps/test_map_E2A/test_map_E2A.yaml"
       #initial_pose: [22.775204767387464, -12.737057590365996, -0.12]
 
   robot_state_update_frequency: 10.0 # Hz

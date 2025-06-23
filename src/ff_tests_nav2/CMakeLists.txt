@@ -5,8 +5,9 @@ project(ff_tests_nav2)
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY launch params rviz_configs
+  DIRECTORY launch params rviz_configs models urdf
   DESTINATION share/${PROJECT_NAME}
 )
+
 
 ament_package()

@@ -2,11 +2,11 @@
 
 <launch>
   <arg name="map_package" default="ff_tests_maps" description="Name of the map package" />
-  <arg name="map_name" description="Name of the ff_tests map to simulate" />
+  <arg name="map_name" default="multi_E2A_sim" description="Name of the ff_tests map to simulate" />
   <arg name="use_crowdsim" default='0'/>
   <arg name="gazebo_version" default='8'/>
   <arg name="sim_update_rate" default='100'/>
-  <arg name="bridge_config" default="$(find-pkg-share turtlebot3_gazebo)/params/turtlebot3_burger_bridge.yaml" />
+  <arg name="bridge_config" default="$(find-pkg-share turtlebot3_gazebo)/params/turtlebot3_waffle_bridge.yaml" />
   <arg name="use_sim_time" default="true" />
   <arg name="frame_prefix" default="" />
   <arg name="robot_model" default="$(env TURTLEBOT3_MODEL)" />

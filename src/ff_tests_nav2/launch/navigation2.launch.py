@@ -10,8 +10,8 @@ from ament_index_python.packages import get_package_share_directory
 robots = [
     {
         'name': 'robot1',
-        'x_pose': 0.28,
-        'y_pose': -6.75,
+        'x_pose': 22.775204767387464,
+        'y_pose': -12.737057590365996,
         'z_pose': 0.01,
         'roll': 0.0,
         'pitch': 0.0,
@@ -19,8 +19,8 @@ robots = [
     },
     {
         'name': 'robot2',
-        'x_pose': 5.67,
-        'y_pose': -9.5,
+        'x_pose': 22.775204767387464,
+        'y_pose': -15.737057590365996,
         'z_pose': 0.01,
         'roll': 0.0,
         'pitch': 0.0,
@@ -32,9 +32,10 @@ def generate_launch_description():
     nav2_pkg = get_package_share_directory('ff_tests_nav2')
     nav2_bringup_dir = get_package_share_directory('nav2_bringup')
     tb3_dir = get_package_share_directory('turtlebot3_gazebo')
+    spawn_dir = get_package_share_directory('ff_tests_nav2')
 
     # Global launch configurations
-    map_file = LaunchConfiguration('map', default=os.path.join(tb3_dir, 'maps', 'map.yaml'))
+    map_file = LaunchConfiguration('map', default="/home/edic/ff_ws_tests/src/ff_tests_maps/maps/multi_E2A_sim/multi_E2A_sim.yaml")
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     use_rviz = LaunchConfiguration('use_rviz', default='true')
 
@@ -46,18 +47,24 @@ def generate_launch_description():
     params_file_robot2 = LaunchConfiguration('params_file_robot2', default=os.path.join(nav2_pkg, 'params', 'nav2_multirobot_params_2.yaml'))
 
     def create_robot_group(robot, params_file):
+        # Map fully qualified names to relative ones so the node's namespace can be prepended.
+        remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
+
         return GroupAction([
-            PushRosNamespace(robot['name']),
+            
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(tb3_dir, 'launch', 'spawn_turtlebot3.launch.py')
+                    os.path.join(spawn_dir, 'launch', 'spawn_tb3.launch.py')
                 ),
                 launch_arguments={
+                    'robot_name': robot['name'],
+                    'namespace': robot['name'],
                     'x_pose': str(robot['x_pose']),
                     'y_pose': str(robot['y_pose']),
                     # Could also pass other launch args if spawn launch is extended
                 }.items(),
             ),
+            PushRosNamespace(robot['name']),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     os.path.join(nav2_bringup_dir, 'launch', 'bringup_launch.py')
@@ -74,7 +81,8 @@ def generate_launch_description():
                 name=f"rviz2_{robot['name']}",
                 output='screen',
                 arguments=['-d', rviz_config_file],
-                parameters=[{'use_sim_time': use_sim_time}]
+                parameters=[{'use_sim_time': use_sim_time}],
+                remappings=remappings
             )
         ])
 
@@ -88,5 +96,5 @@ def generate_launch_description():
 
         # Robot launch groups
         create_robot_group(robots[0], params_file_robot1),
-        create_robot_group(robots[1], params_file_robot2),
+        #create_robot_group(robots[1], params_file_robot2),
     ])
