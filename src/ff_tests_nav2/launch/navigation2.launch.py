@@ -1,92 +1,85 @@
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, TextSubstitution
-from launch_ros.actions import Node, PushRosNamespace
-import os
-from ament_index_python.packages import get_package_share_directory
+# Copyright 2019 Open Source Robotics Foundation, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Author: Darby Lim
 
-# Robot configurations
-robots = [
-    {
-        'name': 'robot1',
-        'x_pose': 0.28,
-        'y_pose': -6.75,
-        'z_pose': 0.01,
-        'roll': 0.0,
-        'pitch': 0.0,
-        'yaw': 0.0,
-    },
-    {
-        'name': 'robot2',
-        'x_pose': 5.67,
-        'y_pose': -9.5,
-        'z_pose': 0.01,
-        'roll': 0.0,
-        'pitch': 0.0,
-        'yaw': 0.0,
-    },
-]
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
 
 def generate_launch_description():
-    nav2_pkg = get_package_share_directory('ff_tests_nav2')
-    nav2_bringup_dir = get_package_share_directory('nav2_bringup')
-    tb3_dir = get_package_share_directory('turtlebot3_gazebo')
+    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    map_dir = LaunchConfiguration(
+        'map',
+        default=os.path.join(
+            get_package_share_directory('turtlebot3_navigation2'),
+            'map',
+            'map.yaml'))
 
-    # Global launch configurations
-    map_file = LaunchConfiguration('map', default=os.path.join(tb3_dir, 'maps', 'map.yaml'))
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    use_rviz = LaunchConfiguration('use_rviz', default='true')
+    param_dir = os.path.join(get_package_share_directory('ff_tests_nav2'), 'params', 'nav2_main.yaml')
 
-    # RViz config file
-    rviz_config_file = os.path.join(nav2_pkg, 'rviz_configs', 'nav2_namespaced_view.rviz')
+    nav2_launch_file_dir = os.path.join(get_package_share_directory('nav2_bringup'), 'launch')
 
-    # Param files
-    params_file_robot1 = LaunchConfiguration('params_file_robot1', default=os.path.join(nav2_pkg, 'params', 'nav2_multirobot_params_1.yaml'))
-    params_file_robot2 = LaunchConfiguration('params_file_robot2', default=os.path.join(nav2_pkg, 'params', 'nav2_multirobot_params_2.yaml'))
+    graph_file = os.path.join(get_package_share_directory('ff_tests_nav2'), 'route_maps', 'E2A.geojson')
 
-    def create_robot_group(robot, params_file):
-        return GroupAction([
-            PushRosNamespace(robot['name']),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(tb3_dir, 'launch', 'spawn_turtlebot3.launch.py')
-                ),
-                launch_arguments={
-                    'x_pose': str(robot['x_pose']),
-                    'y_pose': str(robot['y_pose']),
-                    # Could also pass other launch args if spawn launch is extended
-                }.items(),
-            ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(nav2_bringup_dir, 'launch', 'bringup_launch.py')
-                ),
-                launch_arguments={
-                    'map': map_file,
-                    'use_sim_time': use_sim_time,
-                    'params_file': params_file,
-                }.items()
-            ),
-            Node(
-                package='rviz2',
-                executable='rviz2',
-                name=f"rviz2_{robot['name']}",
-                output='screen',
-                arguments=['-d', rviz_config_file],
-                parameters=[{'use_sim_time': use_sim_time}]
-            )
-        ])
+    rviz_config_dir = os.path.join(
+        get_package_share_directory('turtlebot3_navigation2'),
+        'rviz',
+        'tb3_navigation2.rviz')
 
     return LaunchDescription([
-        # Declare launch arguments
-        DeclareLaunchArgument('map', default_value=os.path.join(tb3_dir, 'maps', 'map.yaml'), description='Map file'),
-        DeclareLaunchArgument('params_file_robot1', default_value=params_file_robot1, description='Param file for robot1'),
-        DeclareLaunchArgument('params_file_robot2', default_value=params_file_robot2, description='Param file for robot2'),
-        DeclareLaunchArgument('use_sim_time', default_value='true', description='Use simulation time'),
-        DeclareLaunchArgument('use_rviz', default_value='true', description='Launch RViz'),
+        DeclareLaunchArgument(
+            'map',
+            default_value=map_dir,
+            description='Full path to map file to load'),
 
-        # Robot launch groups
-        create_robot_group(robots[0], params_file_robot1),
-        create_robot_group(robots[1], params_file_robot2),
+        DeclareLaunchArgument(
+            'params_file',
+            default_value=param_dir,
+            description='Full path to param file to load'),
+
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='false',
+            description='Use simulation (Gazebo) clock if true'),
+        
+        DeclareLaunchArgument(
+            'graph',
+            default_value=graph_file,
+            description='Full path to graph file to load'),
+
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([nav2_launch_file_dir, '/bringup_launch.py']),
+            launch_arguments={
+                'map': map_dir,
+                'graph': graph_file,
+                'use_sim_time': use_sim_time,
+                'params_file': param_dir}.items(),
+        ),
+
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            arguments=['-d', rviz_config_dir],
+            parameters=[{'use_sim_time': use_sim_time}],
+            output='screen'),
     ])
