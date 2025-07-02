@@ -42,11 +42,11 @@
     <arg name="x_pose" value="22" />
     <arg name="y_pose" value="-12" />
     <arg name="graph" value="$(find-pkg-share ff_tests_nav2)/route_maps/E2A.geojson" />
-    <arg name="params_file" value="$(find-pkg-share ff_tests_nav2)/params/nav2_main.yaml"/>
+    <arg name="params_file" value="$(find-pkg-share ff_tests_nav2)/params/nav2_multirobot_params_1.yaml"/>
   </include>
 
   <!-- spawns in studio 4 -->
-  <include file="$(find-pkg-share nav2_bringup)/launch/tb3_simulation_launch.py">
+  <!-- <include file="$(find-pkg-share nav2_bringup)/launch/tb3_simulation_launch.py">
     <arg name="use_sim_time" value="true" />
     <arg name="map" value="$(find-pkg-share $(var map_package))/$(var map_name)/$(var map_name).yaml" />
     <arg name="namespace" value="robot2" />
@@ -56,6 +56,6 @@
     <arg name="y_pose" value="-12" />
     <arg name="graph" value="$(find-pkg-share ff_tests_nav2)/route_maps/E2A.geojson" />
     <arg name="params_file" value="$(find-pkg-share ff_tests_nav2)/params/nav2_main.yaml"/>
-  </include>
+  </include> -->
 
 </launch>
