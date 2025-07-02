@@ -42,7 +42,7 @@
     <arg name="x_pose" value="22" />
     <arg name="y_pose" value="-12" />
     <arg name="graph" value="$(find-pkg-share ff_tests_nav2)/route_maps/E2A.geojson" />
-    <arg name="params_file" value="$(find-pkg-share ff_tests_nav2)/params/nav2_multirobot_params_1.yaml"/>
+    <arg name="params_file" value="$(find-pkg-share ff_tests_nav2)/params/nav2_wafflesim.yaml"/>
   </include>
 
   <!-- spawns in studio 4 -->
