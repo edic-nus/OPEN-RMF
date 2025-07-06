@@ -1,7 +1,7 @@
 coordinate_system: reference_image
 crowd_sim:
   agent_groups:
-    - {agents_name: [], agents_number: 0, group_id: 0, profile_selector: external_agent, state_selector: external_static, x: 0, y: 0}
+    - {agents_name: [tb3], agents_number: 1, group_id: 0, profile_selector: external_agent, state_selector: external_static, x: 0, y: 0}
   agent_profiles:
     - {ORCA_tau: 1, ORCA_tauObst: 0.40000000000000002, class: 1, max_accel: 0, max_angle_vel: 0, max_neighbors: 10, max_speed: 0, name: external_agent, neighbor_dist: 5, obstacle_set: 1, pref_speed: 0, r: 0.25}
   enable: 0
@@ -48,19 +48,19 @@ levels:
       - [84, 102, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
       - [98, 104, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
       - [104, 84, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [82, 105, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [105, 106, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [106, 107, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [107, 108, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [98, 109, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [103, 110, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [103, 111, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
     layers:
       {}
     measurements:
       - [0, 6, {distance: [3, 21.899999999999999]}]
       - [2, 0, {distance: [3, 26.050000000000001]}]
       - [2, 4, {distance: [3, 19.199999999999999]}]
-    models:
-      - {dispensable: false, model_name: OpenRobotics/OfficeChairGrey, name: OpenRobotics/OfficeChairGrey, static: true, x: 558.58900000000006, y: 369.16000000000003, yaw: 3.1059000000000001, z: 0}
-      - {dispensable: false, model_name: OpenRobotics/OfficeChairGrey, name: OpenRobotics/OfficeChairGrey, static: true, x: 556.99000000000001, y: 389.553, yaw: 1.5708, z: 0}
-      - {dispensable: false, model_name: OpenRobotics/OfficeChairGrey, name: OpenRobotics/OfficeChairGrey, static: true, x: 556.99000000000001, y: 389.553, yaw: 1.5708, z: 0}
-      - {dispensable: false, model_name: OpenRobotics/OfficeChairGrey, name: OpenRobotics/OfficeChairGrey, static: true, x: 555.38999999999999, y: 411.94600000000003, yaw: 1.5708, z: 0}
-      - {dispensable: false, model_name: OpenRobotics/OfficeChairGrey, name: OpenRobotics/OfficeChairGrey, static: true, x: 555.38999999999999, y: 411.94600000000003, yaw: 1.5708, z: 0}
-      - {dispensable: false, model_name: OpenRobotics/OfficeChairGrey, name: OpenRobotics/OfficeChairGrey, static: true, x: 553.39099999999996, y: 435.13799999999998, yaw: 1.5708, z: 0}
     vertices:
       - [86.676000000000002, 72.748999999999995, 0, ""]
       - [86.676000000000002, 72.748999999999995, 0, ""]
@@ -144,9 +144,9 @@ levels:
       - [413.714, 144.244, 0, ""]
       - [396.04000000000002, 73.587000000000003, 0, ""]
       - [332.51400000000001, 73.165999999999997, 0, ""]
-      - [255.006, 506.11399999999998, 0, ""]
-      - [383.85199999999998, 523.79300000000001, 0, ""]
-      - [424.99200000000002, 270.86200000000002, 0, ""]
+      - [255.82900000000001, 532.17600000000004, 0, way7]
+      - [378.91500000000002, 550.61800000000005, 0, way6]
+      - [424.99200000000002, 270.86200000000002, 0, way3]
       - [425.32999999999998, 218.17599999999999, 0, way2]
       - [256.37799999999999, 216.797, 0, way1]
       - [417.95999999999998, 528.12599999999998, 0, ""]
@@ -158,15 +158,23 @@ levels:
       - [463.209, 546.12, 0, ""]
       - [466.52800000000002, 516.59500000000003, 0, ""]
       - [258.80500000000001, 119.315, 0, tb3_charger, {is_charger: [4, true], is_parking_spot: [4, true]}]
-      - [255.05799999999999, 465.67000000000002, 0, ""]
-      - [499.65499999999997, 495.78899999999999, 0, ""]
-      - [529.01999999999998, 295.85500000000002, 0, studio2]
+      - [255.05799999999999, 465.67000000000002, 0, way8]
+      - [469.31799999999998, 479.86900000000003, 0, studio2_exit]
+      - [529.01999999999998, 295.85500000000002, 0, studio2, {spawn_robot_name: [1, tb3], spawn_robot_type: [1, turtlebot3_burger]}]
       - [422.73099999999999, 509.33499999999998, 0, ""]
       - [423.35599999999999, 505.14800000000002, 0, ""]
       - [429.851, 466.66699999999997, 0, ""]
-      - [390.79899999999998, 480.42000000000002, 0, ""]
-      - [365.12400000000002, 650.68100000000004, 0, studio3, {is_charger: [4, true], is_parking_spot: [4, true]}]
-      - [421.60300000000001, 289.50700000000001, 0, ""]
+      - [390.79899999999998, 480.42000000000002, 0, way5]
+      - [365.12400000000002, 650.68100000000004, 0, studio3]
+      - [421.60300000000001, 289.50700000000001, 0, way4]
+      - [158.04599999999999, 534.32100000000003, 0, studio4]
+      - [159.19, 395.93799999999999, 0, studio4_waypoint]
+      - [157.47399999999999, 258.69900000000001, 0, studio4_charger, {is_charger: [4, true]}]
+      - [256.97300000000001, 260.98700000000002, 0, way9]
+      - [528.01900000000001, 218.67099999999999, 0, studio2_charger, {is_charger: [4, true]}]
+      - [262.03199999999998, 627.322, 0, studio3_charger, {is_charger: [4, true]}]
+      - [494.21300000000002, 665.29700000000003, 0, studio3_waypoint]
+      - [85.721000000000004, 554.09400000000005, 0, ""]
     walls:
       - [15, 16, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
       - [16, 17, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
@@ -242,5 +250,6 @@ levels:
       - [87, 99, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
       - [99, 100, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
       - [24, 101, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+      - [67, 112, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
 lifts: {}
 name: multi_E2A_sim
