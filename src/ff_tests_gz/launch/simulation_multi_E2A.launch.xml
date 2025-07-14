@@ -33,7 +33,7 @@
   </executable>
 
   <!-- spawns in studio 2 -->
-  <!-- <include file="$(find-pkg-share nav2_bringup)/launch/tb3_simulation_launch.py">
+  <include file="$(find-pkg-share nav2_bringup)/launch/tb3_simulation_launch.py">
     <arg name="use_sim_time" value="true" />
     <arg name="map" value="$(find-pkg-share $(var map_package))/$(var map_name)/$(var map_name).yaml" />
     <arg name="namespace" value="robot1" />
@@ -43,26 +43,32 @@
     <arg name="y_pose" value="-12" />
     <arg name="graph" value="$(find-pkg-share ff_tests_nav2)/route_maps/E2A.geojson" />
     <arg name="params_file" value="$(find-pkg-share ff_tests_nav2)/params/nav2_wafflesim.yaml"/>
-  </include> -->
+  </include>
 
-  <include file="$(find-pkg-share nav2_minimal_tb3_sim)/launch/spawn_tb3.launch.py">
+  <!-- <include file="$(find-pkg-share nav2_minimal_tb3_sim)/launch/spawn_tb3.launch.py">
     <arg name="namespace" value="robot1" />
     <arg name="robot_name" value="robot1" />
     <arg name="x_pose" value="22" />
     <arg name="y_pose" value="-12" />
-  </include>
+  </include> -->
 
-  <!-- spawns in studio 4 -->
-  <!-- <include file="$(find-pkg-share nav2_bringup)/launch/tb3_simulation_launch.py">
+  <!-- spawns in studio 3 -->
+  <include file="$(find-pkg-share nav2_bringup)/launch/tb3_simulation_launch.py">
     <arg name="use_sim_time" value="true" />
     <arg name="map" value="$(find-pkg-share $(var map_package))/$(var map_name)/$(var map_name).yaml" />
     <arg name="namespace" value="robot2" />
     <arg name="use_simulator" value="False" />
     <arg name="robot_name" value="robot2" />
+    <arg name="x_pose" value="20" />
+    <arg name="y_pose" value="-27" />
+    <arg name="graph" value="$(find-pkg-share ff_tests_nav2)/route_maps/E2A.geojson" />
+    <arg name="params_file" value="$(find-pkg-share ff_tests_nav2)/params/nav2_wafflesim.yaml"/>
+  </include>
+  <!-- <include file="$(find-pkg-share nav2_minimal_tb3_sim)/launch/spawn_tb3.launch.py">
+    <arg name="namespace" value="robot2" />
+    <arg name="robot_name" value="robot2" />
     <arg name="x_pose" value="7" />
     <arg name="y_pose" value="-12" />
-    <arg name="graph" value="$(find-pkg-share ff_tests_nav2)/route_maps/E2A.geojson" />
-    <arg name="params_file" value="$(find-pkg-share ff_tests_nav2)/params/nav2_main.yaml"/>
   </include> -->
 
 </launch>
