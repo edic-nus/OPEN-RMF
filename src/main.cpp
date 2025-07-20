@@ -30,24 +30,34 @@ enum DoorMode {
 };
 
 // Door configuration
-#define DOOR_NAME "door1"
+#define NUM_DOORS 2
 #define DOOR_MOVE_TIME_MS 3000  // 3 seconds to open/close
 #define STATUS_PUBLISH_RATE_MS 1000  // 1Hz status updates
 
-// Door state variables
-DoorState current_door_state = DOOR_CLOSED;
-DoorMode requested_door_mode = MODE_CLOSED;
-unsigned long door_movement_start_time = 0;
-bool door_is_moving = false;
-uint32_t door_request_id = 0;
-String last_requester = "";
+// Door information structure
+struct DoorInfo {
+  const char* name;
+  DoorState current_state;
+  DoorMode requested_mode;
+  unsigned long movement_start_time;
+  bool is_moving;
+  uint32_t request_id;
+  String last_requester;
+  // Hardware pins
+  int motor_pin;
+  int sensor_open_pin;
+  int sensor_closed_pin;
+  int lock_pin;
+};
 
-// Physical simulation pins
-#define DOOR_MOTOR_PIN 4      // Simulate door motor
-#define DOOR_SENSOR_OPEN 5    // Simulate door open sensor
-#define DOOR_SENSOR_CLOSED 6  // Simulate door closed sensor  
-#define STATUS_LED_PIN 2      // Status LED
-#define DOOR_LOCK_PIN 7       // Simulate door lock
+// Initialize door information
+DoorInfo doors[NUM_DOORS] = {
+  {"door1", DOOR_CLOSED, MODE_CLOSED, 0, false, 0, "", 4, 5, 6, 7},    // Door 1
+  {"door2", DOOR_CLOSED, MODE_CLOSED, 0, false, 0, "", 8, 9, 10, 11}   // Door 2
+};
+
+// Physical simulation pins - these will be overridden by door-specific pins
+#define STATUS_LED_PIN 2      // Status LED for overall system
 
 // Simple display initialization - focusing on backlight control for now
 bool displayInitialized = false;
@@ -65,60 +75,69 @@ void initDisplay() {
 
 // Initialize door hardware simulation
 void initDoorHardware() {
-    pinMode(DOOR_MOTOR_PIN, OUTPUT);
-    pinMode(DOOR_SENSOR_OPEN, INPUT_PULLUP);
-    pinMode(DOOR_SENSOR_CLOSED, INPUT_PULLUP);
+    // Initialize status LED for overall system
     pinMode(STATUS_LED_PIN, OUTPUT);
-    pinMode(DOOR_LOCK_PIN, OUTPUT);
-    
-    // Initial state: door closed and locked
-    digitalWrite(DOOR_MOTOR_PIN, LOW);
-    digitalWrite(DOOR_LOCK_PIN, HIGH);  // Locked
     digitalWrite(STATUS_LED_PIN, LOW);
     
-    Serial.println("Door hardware initialized - CLOSED and LOCKED");
+    // Initialize each door's hardware
+    for (int i = 0; i < NUM_DOORS; i++) {
+        pinMode(doors[i].motor_pin, OUTPUT);
+        pinMode(doors[i].sensor_open_pin, INPUT_PULLUP);
+        pinMode(doors[i].sensor_closed_pin, INPUT_PULLUP);
+        pinMode(doors[i].lock_pin, OUTPUT);
+        
+        // Initial state: door closed and locked
+        digitalWrite(doors[i].motor_pin, LOW);
+        digitalWrite(doors[i].lock_pin, HIGH);  // Locked
+        
+        Serial.println("Door " + String(doors[i].name) + " hardware initialized - CLOSED and LOCKED");
+    }
 }
 
-// Door state management
+// Door state management for all doors
 void updateDoorState() {
-    if (door_is_moving) {
-        unsigned long elapsed = millis() - door_movement_start_time;
+    for (int i = 0; i < NUM_DOORS; i++) {
+        DoorInfo& door = doors[i];
         
-        if (elapsed >= DOOR_MOVE_TIME_MS) {
-            // Movement complete
-            door_is_moving = false;
-            digitalWrite(DOOR_MOTOR_PIN, LOW);  // Stop motor
+        if (door.is_moving) {
+            unsigned long elapsed = millis() - door.movement_start_time;
             
-            if (requested_door_mode == MODE_OPEN) {
-                current_door_state = DOOR_OPEN;
-                digitalWrite(DOOR_LOCK_PIN, LOW);  // Unlock
-                Serial.println("Door movement complete: OPEN");
+            if (elapsed >= DOOR_MOVE_TIME_MS) {
+                // Movement complete
+                door.is_moving = false;
+                digitalWrite(door.motor_pin, LOW);  // Stop motor
+                
+                if (door.requested_mode == MODE_OPEN) {
+                    door.current_state = DOOR_OPEN;
+                    digitalWrite(door.lock_pin, LOW);  // Unlock
+                    Serial.println("Door " + String(door.name) + " movement complete: OPEN");
+                } else {
+                    door.current_state = DOOR_CLOSED;
+                    digitalWrite(door.lock_pin, HIGH); // Lock
+                    Serial.println("Door " + String(door.name) + " movement complete: CLOSED");
+                }
             } else {
-                current_door_state = DOOR_CLOSED;
-                digitalWrite(DOOR_LOCK_PIN, HIGH); // Lock
-                Serial.println("Door movement complete: CLOSED");
+                door.current_state = DOOR_MOVING;
+                // Simulate motor running
+                digitalWrite(door.motor_pin, (millis() / 100) % 2);
             }
-        } else {
-            current_door_state = DOOR_MOVING;
-            // Simulate motor running
-            digitalWrite(DOOR_MOTOR_PIN, (millis() / 100) % 2);
         }
     }
     
-    // Update status LED
-    switch (current_door_state) {
-        case DOOR_OPEN:
-            digitalWrite(STATUS_LED_PIN, HIGH);
-            break;
-        case DOOR_CLOSED:
-            digitalWrite(STATUS_LED_PIN, LOW);
-            break;
-        case DOOR_MOVING:
-            digitalWrite(STATUS_LED_PIN, (millis() / 250) % 2);  // Fast blink
-            break;
-        case DOOR_ERROR:
-            digitalWrite(STATUS_LED_PIN, (millis() / 500) % 2);  // Slow blink
-            break;
+    // Update status LED based on any door activity
+    bool anyDoorMoving = false;
+    bool anyDoorOpen = false;
+    for (int i = 0; i < NUM_DOORS; i++) {
+        if (doors[i].current_state == DOOR_MOVING) anyDoorMoving = true;
+        if (doors[i].current_state == DOOR_OPEN) anyDoorOpen = true;
+    }
+    
+    if (anyDoorMoving) {
+        digitalWrite(STATUS_LED_PIN, (millis() / 250) % 2);  // Fast blink when any door moving
+    } else if (anyDoorOpen) {
+        digitalWrite(STATUS_LED_PIN, HIGH);  // Solid when any door open
+    } else {
+        digitalWrite(STATUS_LED_PIN, LOW);   // Off when all doors closed
     }
 }
 
@@ -139,10 +158,10 @@ unsigned long lastDisplayUpdate = 0;
 unsigned long lastStatusPublish = 0;
 
 // micro-ROS objects for RMF Door Node
-rcl_publisher_t door_states_publisher;
-rcl_subscription_t door_requests_subscriber;
+rcl_publisher_t door_states_publisher;  // Single publisher for all doors
+rcl_subscription_t door_requests_subscriber;  // Single subscriber for all door requests
 
-rmf_door_msgs__msg__DoorState door_states_msg;
+rmf_door_msgs__msg__DoorState door_states_msg;  // Single message reused for all doors
 rmf_door_msgs__msg__DoorRequest door_requests_msg;
 
 rclc_executor_t executor;
@@ -180,7 +199,7 @@ void updateDisplay() {
   lastDisplayUpdate = millis();
 }
 
-// Publish door states (RMF DoorState format)
+// Publish door states for all doors (RMF DoorState format)
 void publishDoorStates() {
   if (millis() - lastStatusPublish < STATUS_PUBLISH_RATE_MS) return;
   
@@ -188,37 +207,45 @@ void publishDoorStates() {
   unsigned long current_time_sec = millis() / 1000;
   unsigned long current_time_nanosec = (millis() % 1000) * 1000000;
   
-  // Fill RMF DoorState message
-  door_states_msg.door_time.sec = current_time_sec;
-  door_states_msg.door_time.nanosec = current_time_nanosec;
-  
-  // Set door name
-  door_states_msg.door_name.data = (char*)DOOR_NAME;
-  door_states_msg.door_name.size = strlen(DOOR_NAME);
-  door_states_msg.door_name.capacity = strlen(DOOR_NAME) + 1;
-  
-  // Set current mode based on door state
-  if (current_door_state == DOOR_OPEN || (current_door_state == DOOR_MOVING && requested_door_mode == MODE_OPEN)) {
-    door_states_msg.current_mode.value = MODE_OPEN;
-  } else {
-    door_states_msg.current_mode.value = MODE_CLOSED;
+  // Publish state for each door using the same publisher
+  for (int i = 0; i < NUM_DOORS; i++) {
+    DoorInfo& door = doors[i];
+    
+    // Fill RMF DoorState message
+    door_states_msg.door_time.sec = current_time_sec;
+    door_states_msg.door_time.nanosec = current_time_nanosec;
+    
+    // Set door name dynamically
+    strcpy(door_states_msg.door_name.data, door.name);
+    door_states_msg.door_name.size = strlen(door.name);
+    
+    // Set current mode based on door state
+    if (door.current_state == DOOR_OPEN || (door.current_state == DOOR_MOVING && door.requested_mode == MODE_OPEN)) {
+      door_states_msg.current_mode.value = MODE_OPEN;
+    } else {
+      door_states_msg.current_mode.value = MODE_CLOSED;
+    }
+    
+    RCSOFTCHECK(rcl_publish(&door_states_publisher, &door_states_msg, NULL));
+    
+    const char* stateStr = getDoorStateString(door.current_state);
+    const char* modeStr = (door_states_msg.current_mode.value == MODE_OPEN) ? "OPEN" : "CLOSED";
+    addLogMessage(String(door.name) + " - State: " + String(stateStr) + " | Mode: " + String(modeStr));
   }
   
-  RCSOFTCHECK(rcl_publish(&door_states_publisher, &door_states_msg, NULL));
-  
-  const char* stateStr = getDoorStateString(current_door_state);
-  const char* modeStr = (door_states_msg.current_mode.value == MODE_OPEN) ? "OPEN" : "CLOSED";
-  addLogMessage("States: " + String(stateStr) + " | Mode: " + String(modeStr));
   lastStatusPublish = millis();
 }
 
 // Error handling
 void error_loop(){
   addLogMessage("ERROR: RMF Door Node failed!");
-  current_door_state = DOOR_ERROR;
+  // Set all doors to error state
+  for (int i = 0; i < NUM_DOORS; i++) {
+    doors[i].current_state = DOOR_ERROR;
+  }
   updateDisplay();
   while(1){
-    digitalWrite(STATUS_LED_PIN, !digitalRead(STATUS_LED_PIN));
+    digitalWrite(STATUS_LED_PIN, (millis() / 500) % 2);  // Slow blink for error
     delay(100);
   }
 }
@@ -245,42 +272,52 @@ void door_requests_callback(const void * msgin)
   addLogMessage("Request received from: " + requester_id + " for door: " + door_name);
   addLogMessage("Requested mode: " + String(requested_mode));
   
-  // Check if this request is for our door
-  if (door_name != String(DOOR_NAME)) {
-    addLogMessage("Request not for this door (" + String(DOOR_NAME) + "), ignoring");
+  // Find the door with matching name
+  int door_index = -1;
+  for (int i = 0; i < NUM_DOORS; i++) {
+    if (door_name == String(doors[i].name)) {
+      door_index = i;
+      break;
+    }
+  }
+  
+  if (door_index == -1) {
+    addLogMessage("Request for unknown door: " + door_name);
     return;
   }
   
+  DoorInfo& door = doors[door_index];
+  
   if (requested_mode == MODE_OPEN) {
-    if (current_door_state == DOOR_CLOSED) {
-      requested_door_mode = MODE_OPEN;
-      door_is_moving = true;
-      door_movement_start_time = millis();
-      door_request_id++;
-      last_requester = requester_id;
+    if (door.current_state == DOOR_CLOSED) {
+      door.requested_mode = MODE_OPEN;
+      door.is_moving = true;
+      door.movement_start_time = millis();
+      door.request_id++;
+      door.last_requester = requester_id;
       
-      digitalWrite(DOOR_MOTOR_PIN, HIGH);  // Start motor
-      addLogMessage("Door opening... Requester: " + last_requester + " | ID: " + String(door_request_id));
+      digitalWrite(door.motor_pin, HIGH);  // Start motor
+      addLogMessage(String(door.name) + " opening... Requester: " + door.last_requester + " | ID: " + String(door.request_id));
     } else {
-      addLogMessage("Door already open or moving");
+      addLogMessage(String(door.name) + " already open or moving");
     }
   }
   else if (requested_mode == MODE_CLOSED) {
-    if (current_door_state == DOOR_OPEN) {
-      requested_door_mode = MODE_CLOSED;
-      door_is_moving = true;
-      door_movement_start_time = millis();
-      door_request_id++;
-      last_requester = requester_id;
+    if (door.current_state == DOOR_OPEN) {
+      door.requested_mode = MODE_CLOSED;
+      door.is_moving = true;
+      door.movement_start_time = millis();
+      door.request_id++;
+      door.last_requester = requester_id;
       
-      digitalWrite(DOOR_MOTOR_PIN, HIGH);  // Start motor
-      addLogMessage("Door closing... Requester: " + last_requester + " | ID: " + String(door_request_id));
+      digitalWrite(door.motor_pin, HIGH);  // Start motor
+      addLogMessage(String(door.name) + " closing... Requester: " + door.last_requester + " | ID: " + String(door.request_id));
     } else {
-      addLogMessage("Door already closed or moving");
+      addLogMessage(String(door.name) + " already closed or moving");
     }
   }
   else {
-    addLogMessage("Unknown requested mode: " + String(requested_mode));
+    addLogMessage("Unknown requested mode: " + String(requested_mode) + " for door: " + door_name);
   }
 }
 
@@ -289,8 +326,8 @@ void setup() {
   Serial.begin(115200);
   delay(2000); // Give serial time to initialize
   
-  Serial.println("=== Open-RMF Door Node Starting ===");
-  Serial.println("Door: " + String(DOOR_NAME));
+  Serial.println("=== Open-RMF Multi-Door Node Starting ===");
+  Serial.println("Doors: door1, door2");
   Serial.println("Initializing hardware...");
   
   // Initialize door hardware
@@ -304,8 +341,8 @@ void setup() {
     logBuffer[i] = "";
   }
   
-  addLogMessage("RMF Door Node initializing...");
-  addLogMessage("Door: " + String(DOOR_NAME));
+  addLogMessage("RMF Multi-Door Node initializing...");
+  addLogMessage("Doors: door1, door2");
   updateDisplay();
   
   // Configure micro-ROS transport
@@ -332,7 +369,7 @@ void setup() {
   updateDisplay();
   RCCHECK(rclc_node_init_default(&node, "rmf_door_node", "", &support));
 
-  // Create door states publisher
+  // Create single door states publisher for all doors
   addLogMessage("Creating states publisher...");
   updateDisplay();
   RCCHECK(rclc_publisher_init_default(
@@ -368,12 +405,9 @@ void setup() {
   RCCHECK(rclc_executor_add_timer(&executor, &status_timer));
   RCCHECK(rclc_executor_add_subscription(&executor, &door_requests_subscriber, &door_requests_msg, &door_requests_callback, ON_NEW_DATA));
 
-  // Initialize messages
-  // Initialize door name string
+  // Initialize single door states message
   door_states_msg.door_name.data = (char*)malloc(50);
   door_states_msg.door_name.capacity = 50;
-  strcpy(door_states_msg.door_name.data, DOOR_NAME);
-  door_states_msg.door_name.size = strlen(DOOR_NAME);
   
   // Initialize door request message strings
   door_requests_msg.door_name.data = (char*)malloc(50);
@@ -381,18 +415,22 @@ void setup() {
   door_requests_msg.requester_id.data = (char*)malloc(100);
   door_requests_msg.requester_id.capacity = 100;
   
-  addLogMessage("RMF Door Node ready!");
-  addLogMessage("State: " + String(getDoorStateString(current_door_state)));
+  addLogMessage("RMF Multi-Door Node ready!");
+  for (int i = 0; i < NUM_DOORS; i++) {
+    addLogMessage(String(doors[i].name) + " State: " + String(getDoorStateString(doors[i].current_state)));
+  }
   addLogMessage("Listening on /door_requests");
   addLogMessage("Publishing to /door_states");
   updateDisplay();
   
-  Serial.println("=== RMF Door Node Ready ===");
+  Serial.println("=== RMF Multi-Door Node Ready ===");
   Serial.println("ROS Domain ID: " + String(ROS_DOMAIN_ID));
+  Serial.println("Doors: door1, door2");
   Serial.println("Topics:");
   Serial.println("  Subscribe: /door_requests (rmf_door_msgs/DoorRequest)");
   Serial.println("  Publish:   /door_states (rmf_door_msgs/DoorState)");
   Serial.println("Native RMF message types enabled");
+  Serial.println("Note: Both doors publish to the same /door_states topic");
 }
 
 void loop() {
