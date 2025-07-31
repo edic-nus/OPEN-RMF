@@ -13,6 +13,14 @@
 #include <std_msgs/msg/u_int32.h>
 #include <builtin_interfaces/msg/time.h>
 
+// Display libraries
+#include <lvgl.h>
+#include <ESP_Panel_Library.h>
+#include <ESP_IOExpander_Library.h>
+
+// I2C driver for manual initialization
+#include "driver/i2c.h"
+
 #include "micro_ros_config.h"
 
 // Open-RMF Door Simulation States
@@ -59,18 +67,250 @@ DoorInfo doors[NUM_DOORS] = {
 // Physical simulation pins - these will be overridden by door-specific pins
 #define STATUS_LED_PIN 2      // Status LED for overall system
 
-// Simple display initialization - focusing on backlight control for now
+// LVGL porting configurations
+#define LVGL_TICK_PERIOD_MS     (2)
+#define LVGL_TASK_MAX_DELAY_MS  (500)
+#define LVGL_TASK_MIN_DELAY_MS  (1)
+#define LVGL_TASK_STACK_SIZE    (4 * 1024)
+#define LVGL_TASK_PRIORITY      (2)
+#define LVGL_BUF_SIZE           (ESP_PANEL_LCD_H_RES * 20)
+
+// Extend IO Pin define for Waveshare ESP32-S3-Touch-LCD-4.3
+#define TP_RST 1
+#define LCD_BL 2
+#define LCD_RST 3
+#define SD_CS 4
+#define USB_SEL 5
+
+// I2C Pin define
+#define I2C_MASTER_NUM 0
+#define I2C_MASTER_SDA_IO 8
+#define I2C_MASTER_SCL_IO 9
+
+ESP_Panel *panel = NULL;
+SemaphoreHandle_t lvgl_mux = NULL;
+
+// LVGL display objects for door status
+lv_obj_t *screen_main;
+lv_obj_t *label_title;
+lv_obj_t *label_door1_name;
+lv_obj_t *label_door1_status;
+lv_obj_t *label_door2_name;
+lv_obj_t *label_door2_status;
+lv_obj_t *label_timestamp;
+
 bool displayInitialized = false;
 
-void initDisplay() {
-    Serial.println("Initializing RMF Door Display...");
+// LVGL porting functions
+#if ESP_PANEL_LCD_BUS_TYPE == ESP_PANEL_BUS_TYPE_RGB
+/* Display flushing */
+void lvgl_port_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
+{
+    panel->getLcd()->drawBitmap(area->x1, area->y1, area->x2 + 1, area->y2 + 1, color_p);
+    lv_disp_flush_ready(disp);
+}
+#else
+/* Display flushing */
+void lvgl_port_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
+{
+    panel->getLcd()->drawBitmap(area->x1, area->y1, area->x2 + 1, area->y2 + 1, color_p);
+}
+
+bool notify_lvgl_flush_ready(void *user_ctx)
+{
+    lv_disp_drv_t *disp_driver = (lv_disp_drv_t *)user_ctx;
+    lv_disp_flush_ready(disp_driver);
+    return false;
+}
+#endif
+
+#if ESP_PANEL_USE_LCD_TOUCH
+/* Read the touchpad */
+void lvgl_port_tp_read(lv_indev_drv_t * indev, lv_indev_data_t * data)
+{
+    panel->getLcdTouch()->readData();
+
+    bool touched = panel->getLcdTouch()->getTouchState();
+    if(!touched) {
+        data->state = LV_INDEV_STATE_REL;
+    } else {
+        TouchPoint point = panel->getLcdTouch()->getPoint();
+        data->state = LV_INDEV_STATE_PR;
+        data->point.x = point.x;
+        data->point.y = point.y;
+    }
+}
+#endif
+
+void lvgl_port_lock(int timeout_ms)
+{
+    const TickType_t timeout_ticks = (timeout_ms < 0) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
+    xSemaphoreTakeRecursive(lvgl_mux, timeout_ticks);
+}
+
+void lvgl_port_unlock(void)
+{
+    xSemaphoreGiveRecursive(lvgl_mux);
+}
+
+void lvgl_port_task(void *arg)
+{
+    Serial.println("Starting LVGL task");
+
+    uint32_t task_delay_ms = LVGL_TASK_MAX_DELAY_MS;
+    while (1) {
+        lvgl_port_lock(-1);
+        task_delay_ms = lv_timer_handler();
+        lvgl_port_unlock();
+        if (task_delay_ms > LVGL_TASK_MAX_DELAY_MS) {
+            task_delay_ms = LVGL_TASK_MAX_DELAY_MS;
+        } else if (task_delay_ms < LVGL_TASK_MIN_DELAY_MS) {
+            task_delay_ms = LVGL_TASK_MIN_DELAY_MS;
+        }
+        vTaskDelay(pdMS_TO_TICKS(task_delay_ms));
+    }
+}
+
+void createDoorStatusUI() {
+    lvgl_port_lock(-1);
     
-    // Setup backlight
-    pinMode(38, OUTPUT);
-    digitalWrite(38, HIGH); // Turn on backlight
+    // Create main screen
+    screen_main = lv_obj_create(NULL);
+    lv_obj_clear_flag(screen_main, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(screen_main, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    
+    // Title
+    label_title = lv_label_create(screen_main);
+    lv_label_set_text(label_title, "Open-RMF Door Monitor");
+    lv_obj_set_style_text_color(label_title, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(label_title, LV_FONT_DEFAULT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_align(label_title, LV_ALIGN_TOP_MID, 0, 20);
+    
+    // Door 1 Status
+    label_door1_name = lv_label_create(screen_main);
+    lv_label_set_text(label_door1_name, "Door 1:");
+    lv_obj_set_style_text_color(label_door1_name, lv_color_hex(0x00FF00), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(label_door1_name, LV_FONT_DEFAULT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_align(label_door1_name, LV_ALIGN_LEFT_MID, 50, -60);
+    
+    label_door1_status = lv_label_create(screen_main);
+    lv_label_set_text(label_door1_status, "CLOSED");
+    lv_obj_set_style_text_color(label_door1_status, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(label_door1_status, LV_FONT_DEFAULT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_align(label_door1_status, LV_ALIGN_LEFT_MID, 150, -60);
+    
+    // Door 2 Status
+    label_door2_name = lv_label_create(screen_main);
+    lv_label_set_text(label_door2_name, "Door 2:");
+    lv_obj_set_style_text_color(label_door2_name, lv_color_hex(0x00FF00), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(label_door2_name, LV_FONT_DEFAULT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_align(label_door2_name, LV_ALIGN_LEFT_MID, 50, -20);
+    
+    label_door2_status = lv_label_create(screen_main);
+    lv_label_set_text(label_door2_status, "CLOSED");
+    lv_obj_set_style_text_color(label_door2_status, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(label_door2_status, LV_FONT_DEFAULT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_align(label_door2_status, LV_ALIGN_LEFT_MID, 150, -20);
+    
+    // Timestamp
+    label_timestamp = lv_label_create(screen_main);
+    lv_label_set_text(label_timestamp, "System Online");
+    lv_obj_set_style_text_color(label_timestamp, lv_color_hex(0x888888), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(label_timestamp, LV_FONT_DEFAULT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_align(label_timestamp, LV_ALIGN_BOTTOM_MID, 0, -20);
+    
+    // Load the main screen
+    lv_disp_load_scr(screen_main);
+    
+    lvgl_port_unlock();
+}
+
+void initDisplay() {
+    Serial.println("Initializing RMF Door Display with LVGL...");
+    
+    panel = new ESP_Panel();
+
+    // Initialize LVGL core
+    lv_init();
+
+    // Initialize LVGL buffers
+    static lv_disp_draw_buf_t draw_buf;
+    uint8_t *buf = (uint8_t *)heap_caps_calloc(1, LVGL_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_INTERNAL);
+    assert(buf);
+    lv_disp_draw_buf_init(&draw_buf, buf, NULL, LVGL_BUF_SIZE);
+
+    // Initialize the display device
+    static lv_disp_drv_t disp_drv;
+    lv_disp_drv_init(&disp_drv);
+    disp_drv.hor_res = ESP_PANEL_LCD_H_RES;
+    disp_drv.ver_res = ESP_PANEL_LCD_V_RES;
+    disp_drv.flush_cb = lvgl_port_disp_flush;
+    disp_drv.draw_buf = &draw_buf;
+    lv_disp_drv_register(&disp_drv);
+
+#if ESP_PANEL_USE_LCD_TOUCH
+    // Initialize the input device
+    static lv_indev_drv_t indev_drv;
+    lv_indev_drv_init(&indev_drv);
+    indev_drv.type = LV_INDEV_TYPE_POINTER;
+    indev_drv.read_cb = lvgl_port_tp_read;
+    lv_indev_drv_register(&indev_drv);
+#endif
+
+    // Initialize bus and device of panel
+    panel->init();
+#if ESP_PANEL_LCD_BUS_TYPE != ESP_PANEL_BUS_TYPE_RGB
+    panel->getLcd()->setCallback(notify_lvgl_flush_ready, &disp_drv);
+#endif
+
+    // Initialize IO expander for Waveshare ESP32-S3-Touch-LCD-4.3
+    Serial.println("Initialize IO expander");
+    
+    // Initialize I2C driver first
+    i2c_config_t i2c_conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = (gpio_num_t)I2C_MASTER_SDA_IO,
+        .scl_io_num = (gpio_num_t)I2C_MASTER_SCL_IO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master = {
+            .clk_speed = 400000,
+        },
+    };
+    
+    esp_err_t i2c_result = i2c_param_config((i2c_port_t)I2C_MASTER_NUM, &i2c_conf);
+    if (i2c_result == ESP_OK) {
+        i2c_result = i2c_driver_install((i2c_port_t)I2C_MASTER_NUM, I2C_MODE_MASTER, 0, 0, 0);
+        if (i2c_result == ESP_OK) {
+            Serial.println("I2C driver initialized successfully");
+        } else {
+            Serial.printf("I2C driver install failed: %s\n", esp_err_to_name(i2c_result));
+        }
+    } else {
+        Serial.printf("I2C config failed: %s\n", esp_err_to_name(i2c_result));
+    }
+    
+    // Now create the IO expander
+    ESP_IOExpander *expander = new ESP_IOExpander_CH422G(I2C_MASTER_NUM, ESP_IO_EXPANDER_I2C_CH422G_ADDRESS_000);
+    expander->init();
+    expander->begin();
+    expander->multiPinMode(TP_RST | LCD_BL | LCD_RST | SD_CS | USB_SEL, OUTPUT);
+    expander->multiDigitalWrite(TP_RST | LCD_BL | LCD_RST | SD_CS, HIGH);
+    expander->digitalWrite(USB_SEL, LOW);
+    panel->addIOExpander(expander);
+
+    // Start panel
+    panel->begin();
+
+    // Create a task to run the LVGL task periodically
+    lvgl_mux = xSemaphoreCreateRecursiveMutex();
+    xTaskCreate(lvgl_port_task, "lvgl", LVGL_TASK_STACK_SIZE, NULL, LVGL_TASK_PRIORITY, NULL);
+
+    // Create door status UI
+    createDoorStatusUI();
     
     displayInitialized = true;
-    Serial.println("RMF Door Display initialized");
+    Serial.println("RMF Door Display with LVGL initialized");
 }
 
 // Initialize door hardware simulation
@@ -171,8 +411,8 @@ rcl_node_t node;
 rcl_timer_t status_timer;
 
 #define LED_PIN 2
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
-#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop(temp_rc, #fn);}}
+#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.println("Soft error in " #fn ": " + String(temp_rc));}}
 
 // Function to add log message to buffer
 void addLogMessage(String message) {
@@ -181,19 +421,75 @@ void addLogMessage(String message) {
   Serial.println(message);
 }
 
-// Function to update display (placeholder for now)
-void updateDisplay() {
-  if (millis() - lastDisplayUpdate < 100) return; // Limit update rate
-  
-  // Simple activity indicator with backlight
-  if (displayInitialized) {
-    static bool activityBlink = false;
-    if (millis() % 2000 < 100) { // Brief blink every 2 seconds
-      digitalWrite(38, activityBlink);
-      activityBlink = !activityBlink;
-    } else {
-      digitalWrite(38, HIGH);
+// Function to display current door status summary
+void printDoorStatusSummary() {
+  static unsigned long lastSummary = 0;
+  if (millis() - lastSummary > 5000) { // Every 5 seconds
+    Serial.println("=== RMF Door Status Summary ===");
+    for (int i = 0; i < NUM_DOORS; i++) {
+      Serial.printf("Door %s: %s", doors[i].name, getDoorStateString(doors[i].current_state));
+      if (doors[i].is_moving) {
+        unsigned long elapsed = millis() - doors[i].movement_start_time;
+        Serial.printf(" (Moving: %lu ms)", elapsed);
+      }
+      if (doors[i].last_requester.length() > 0) {
+        Serial.printf(" [Last req: %s]", doors[i].last_requester.c_str());
+      }
+      Serial.println();
     }
+    Serial.println("==============================");
+    lastSummary = millis();
+  }
+}
+
+// Function to update display with door statuses
+void updateDisplay() {
+  if (millis() - lastDisplayUpdate < 500) return; // Limit update rate to 2Hz
+  
+  if (displayInitialized) {
+    lvgl_port_lock(-1);
+    
+    // Update Door 1 status
+    const char* door1_state = getDoorStateString(doors[0].current_state);
+    lv_label_set_text(label_door1_status, door1_state);
+    
+    // Set color based on door state
+    if (doors[0].current_state == DOOR_OPEN) {
+      lv_obj_set_style_text_color(label_door1_status, lv_color_hex(0x00FF00), LV_PART_MAIN | LV_STATE_DEFAULT); // Green
+    } else if (doors[0].current_state == DOOR_MOVING) {
+      lv_obj_set_style_text_color(label_door1_status, lv_color_hex(0xFFFF00), LV_PART_MAIN | LV_STATE_DEFAULT); // Yellow
+    } else if (doors[0].current_state == DOOR_ERROR) {
+      lv_obj_set_style_text_color(label_door1_status, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT); // Red
+    } else {
+      lv_obj_set_style_text_color(label_door1_status, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT); // White
+    }
+    
+    // Update Door 2 status
+    const char* door2_state = getDoorStateString(doors[1].current_state);
+    lv_label_set_text(label_door2_status, door2_state);
+    
+    // Set color based on door state
+    if (doors[1].current_state == DOOR_OPEN) {
+      lv_obj_set_style_text_color(label_door2_status, lv_color_hex(0x00FF00), LV_PART_MAIN | LV_STATE_DEFAULT); // Green
+    } else if (doors[1].current_state == DOOR_MOVING) {
+      lv_obj_set_style_text_color(label_door2_status, lv_color_hex(0xFFFF00), LV_PART_MAIN | LV_STATE_DEFAULT); // Yellow
+    } else if (doors[1].current_state == DOOR_ERROR) {
+      lv_obj_set_style_text_color(label_door2_status, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT); // Red
+    } else {
+      lv_obj_set_style_text_color(label_door2_status, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT); // White
+    }
+    
+    // Update timestamp with current system uptime
+    char timestamp_text[50];
+    unsigned long uptime_minutes = millis() / 60000;
+    unsigned long uptime_seconds = (millis() / 1000) % 60;
+    snprintf(timestamp_text, sizeof(timestamp_text), "Uptime: %lu:%02lu", uptime_minutes, uptime_seconds);
+    lv_label_set_text(label_timestamp, timestamp_text);
+    
+    lvgl_port_unlock();
+    
+    // Simple activity indicator - no direct backlight control needed
+    // The ESP32_Display_Panel handles backlight through IO expander
   }
   
   lastDisplayUpdate = millis();
@@ -237,8 +533,39 @@ void publishDoorStates() {
 }
 
 // Error handling
-void error_loop(){
-  addLogMessage("ERROR: RMF Door Node failed!");
+void error_loop(rcl_ret_t error_code, const char* function_name){
+  String error_msg = "ERROR: RMF Door Node failed in " + String(function_name) + " with code: " + String(error_code);
+  Serial.println(error_msg);
+  addLogMessage(error_msg);
+  
+  // Print more detailed error information
+  switch(error_code) {
+    case RCL_RET_OK:
+      Serial.println("Error code: RCL_RET_OK (0) - This shouldn't happen!");
+      break;
+    case RCL_RET_ERROR:
+      Serial.println("Error code: RCL_RET_ERROR (1) - Generic error");
+      break;
+    case RCL_RET_TIMEOUT:
+      Serial.println("Error code: RCL_RET_TIMEOUT (2) - Timeout occurred");
+      break;
+    case RCL_RET_BAD_ALLOC:
+      Serial.println("Error code: RCL_RET_BAD_ALLOC (10) - Memory allocation failed");
+      break;
+    case RCL_RET_INVALID_ARGUMENT:
+      Serial.println("Error code: RCL_RET_INVALID_ARGUMENT (11) - Invalid argument");
+      break;
+    case RCL_RET_NOT_INIT:
+      Serial.println("Error code: RCL_RET_NOT_INIT (20) - Not initialized");
+      break;
+    case RCL_RET_ALREADY_INIT:
+      Serial.println("Error code: RCL_RET_ALREADY_INIT (21) - Already initialized");
+      break;
+    default:
+      Serial.println("Error code: " + String(error_code) + " - Unknown error code");
+      break;
+  }
+  
   // Set all doors to error state
   for (int i = 0; i < NUM_DOORS; i++) {
     doors[i].current_state = DOOR_ERROR;
@@ -346,8 +673,10 @@ void setup() {
   updateDisplay();
   
   // Configure micro-ROS transport
+  Serial.println("Setting micro-ROS serial transport...");
   set_microros_serial_transports(Serial);
   
+  Serial.println("Getting default allocator...");
   allocator = rcl_get_default_allocator();
 
   // Create init_options with domain ID
@@ -355,23 +684,30 @@ void setup() {
   addLogMessage("Using ROS Domain ID: " + String(ROS_DOMAIN_ID));
   updateDisplay();
   
+  Serial.println("Initializing init options...");
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   RCCHECK(rcl_init_options_init(&init_options, allocator));
+  
+  Serial.println("Setting domain ID to: " + String(ROS_DOMAIN_ID));
   RCCHECK(rcl_init_options_set_domain_id(&init_options, ROS_DOMAIN_ID));
   
+  Serial.println("Initializing rclc support with options...");
   RCCHECK(rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator));
   
+  Serial.println("Finalizing init options...");
   // Clean up init options
   RCCHECK(rcl_init_options_fini(&init_options));
 
   // Create node
   addLogMessage("Creating RMF door node...");
   updateDisplay();
+  Serial.println("Creating node 'rmf_door_node'...");
   RCCHECK(rclc_node_init_default(&node, "rmf_door_node", "", &support));
 
   // Create single door states publisher for all doors
   addLogMessage("Creating states publisher...");
   updateDisplay();
+  Serial.println("Creating publisher for /door_states...");
   RCCHECK(rclc_publisher_init_default(
     &door_states_publisher,
     &node,
@@ -381,6 +717,7 @@ void setup() {
   // Create door requests subscriber
   addLogMessage("Creating requests subscriber...");
   updateDisplay();
+  Serial.println("Creating subscriber for /door_requests...");
   RCCHECK(rclc_subscription_init_default(
     &door_requests_subscriber,
     &node,
@@ -390,6 +727,8 @@ void setup() {
   // Create status timer (1Hz)
   addLogMessage("Creating status timer...");
   updateDisplay();
+  Serial.println("Creating status timer...");
+  Serial.println("Creating status timer...");
   const unsigned int timer_timeout = STATUS_PUBLISH_RATE_MS;
   RCCHECK(rclc_timer_init_default2(
     &status_timer,
@@ -401,10 +740,16 @@ void setup() {
   // Create executor
   addLogMessage("Creating executor...");
   updateDisplay();
+  Serial.println("Creating executor with 2 handlers...");
   RCCHECK(rclc_executor_init(&executor, &support.context, 2, &allocator));
+  
+  Serial.println("Adding timer to executor...");
   RCCHECK(rclc_executor_add_timer(&executor, &status_timer));
+  
+  Serial.println("Adding subscription to executor...");
   RCCHECK(rclc_executor_add_subscription(&executor, &door_requests_subscriber, &door_requests_msg, &door_requests_callback, ON_NEW_DATA));
 
+  Serial.println("Initializing message memory...");
   // Initialize single door states message
   door_states_msg.door_name.data = (char*)malloc(50);
   door_states_msg.door_name.capacity = 50;
@@ -442,6 +787,9 @@ void loop() {
   
   // Update display regularly
   updateDisplay();
+  
+  // Print door status summary periodically
+  printDoorStatusSummary();
   
   delay(10); // Small delay to prevent watchdog issues
 }
