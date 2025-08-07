@@ -2,8 +2,8 @@
 
 ## Choosing your branch
 
-### Free Fleet Adapter Testing
-This branch is used to test rmf-adapter in simulation withou dealing with nav2 issues. To use this branch:
+### RMF-Slotcar Testing
+This branch is used to test rmf-adapter in simulation without dealing with nav2 issues. To use this branch:
 ```bash
 git clone git@github.com:edic-nus/OPEN-RMF.git -b slotcar_adapter_testing
 ```
