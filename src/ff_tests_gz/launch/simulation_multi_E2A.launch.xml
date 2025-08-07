@@ -13,7 +13,9 @@
   <arg name="urdf_path" default="$(find-pkg-share turtlebot3_gazebo)/urdf/turtlebot3_$(var robot_model).urdf" />
 
   <let name="world_path" value="$(find-pkg-share $(var map_package))/maps/$(var map_name)/$(var map_name).world" />
-  <let name="model_path" value="$(find-pkg-share $(var map_package))/maps/$(var map_name)/models:$(find-pkg-share $(var map_package))/maps/$(var map_name)/models:$(find-pkg-share rmf_demos_assets)/models:$(env HOME)/.gazebo/models:$(env HOME)/turtlebot3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models" />
+  <let name="model_path" value="$(find-pkg-share $(var map_package))/maps/$(var map_name)/models:$(find-pkg-share $(var map_package))/maps/$(var map_name)/models:
+  $(find-pkg-share rmf_demos_assets)/models:$(env HOME)/.gazebo/models:
+  $(find-pkg-share nav2_minimal_tb3_sim)/models:$(find-pkg-share nav2_minimal_tb3_sim)/.." />
   <let name="plugin_path" value="$(find-pkg-prefix rmf_robot_sim_gz_plugins)/lib/rmf_robot_sim_gz_plugins:$(find-pkg-prefix rmf_building_sim_gz_plugins)/lib/rmf_building_sim_gz_plugins" />
 
   <!-- Use crowd sim if `use_crowdsim` is true-->
@@ -24,10 +26,49 @@
   <let name="gz_headless" unless="$(var headless)" value="" />
 
   <executable cmd="gz sim --force-version $(var gazebo_version) $(var gz_headless) -r -v 3 $(var world_path)" output="both">
-    <env name="GZ_SIM_RESOURCE_PATH" value="$(var model_path):$(var world_path):$(env HOME)/turtlebot3_ws/install/turtlebot3_gazebo/share/turtlebot3_gazebo/models>" />
+    <env name="GZ_SIM_RESOURCE_PATH" value="$(var model_path):$(var world_path):" />
     <env name="GZ_SIM_SYSTEM_PLUGIN_PATH" value="$(var plugin_path)"/>
     <env name="GZ_GUI_PLUGIN_PATH" value="$(var plugin_path)"/>
     <env name="MENGE_RESOURCE_PATH" value="$(var menge_resource_path)"/>
   </executable>
+
+  <!-- spawns in studio 2 -->
+  <include file="$(find-pkg-share nav2_bringup)/launch/tb3_simulation_launch.py">
+    <arg name="use_sim_time" value="true" />
+    <arg name="map" value="$(find-pkg-share $(var map_package))/$(var map_name)/$(var map_name).yaml" />
+    <arg name="namespace" value="robot1" />
+    <arg name="use_simulator" value="False" />
+    <arg name="robot_name" value="robot1" />
+    <arg name="x_pose" value="22" />
+    <arg name="y_pose" value="-12" />
+    <arg name="graph" value="$(find-pkg-share ff_tests_nav2)/route_maps/E2A.geojson" />
+    <arg name="params_file" value="$(find-pkg-share ff_tests_nav2)/params/nav2_wafflesim.yaml"/>
+  </include>
+
+  <!-- <include file="$(find-pkg-share nav2_minimal_tb3_sim)/launch/spawn_tb3.launch.py">
+    <arg name="namespace" value="robot1" />
+    <arg name="robot_name" value="robot1" />
+    <arg name="x_pose" value="22" />
+    <arg name="y_pose" value="-12" />
+  </include> -->
+
+  <!-- spawns in studio 3 -->
+  <include file="$(find-pkg-share nav2_bringup)/launch/tb3_simulation_launch.py">
+    <arg name="use_sim_time" value="true" />
+    <arg name="map" value="$(find-pkg-share $(var map_package))/$(var map_name)/$(var map_name).yaml" />
+    <arg name="namespace" value="robot2" />
+    <arg name="use_simulator" value="False" />
+    <arg name="robot_name" value="robot2" />
+    <arg name="x_pose" value="20" />
+    <arg name="y_pose" value="-27" />
+    <arg name="graph" value="$(find-pkg-share ff_tests_nav2)/route_maps/E2A.geojson" />
+    <arg name="params_file" value="$(find-pkg-share ff_tests_nav2)/params/nav2_wafflesim.yaml"/>
+  </include>
+  <!-- <include file="$(find-pkg-share nav2_minimal_tb3_sim)/launch/spawn_tb3.launch.py">
+    <arg name="namespace" value="robot2" />
+    <arg name="robot_name" value="robot2" />
+    <arg name="x_pose" value="7" />
+    <arg name="y_pose" value="-12" />
+  </include> -->
 
 </launch>
