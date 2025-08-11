@@ -6,14 +6,17 @@ This part of the project implements a lift (elevator) system that can be control
 
 ## Structure
 
-- `/desktop`  
+- `/desktop`:
   Contains the code for performing MQTT communication to the lift system through your desktop
 
-- `/nav`  
+- `/nav`:
   Contains the code for controlling Turtlebot for navigation and performing MQTT communication to the lift system
 
-- `/rpi`  
+- `/rpi`:
   Contains the code for initializing an MQTT listener on the Raspberry Pi that controls the lift.
+
+- `/image`:
+  Contains pictures of the lift system for reference purposes
 
 ---
 
