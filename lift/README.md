@@ -84,7 +84,7 @@ python mqtt_listener.py
 
 ```bash
 cd desktop
-python mqtt_publisher.py
+sudo python mqtt_publisher.py
 ```
 
 After doing these steps, you should be able to control the Lift Raspberry Pi by sending messages to the terminal.
