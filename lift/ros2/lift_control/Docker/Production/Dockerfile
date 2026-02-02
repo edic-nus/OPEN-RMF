@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install WiringPi manually from source
-UN git clone https://github.com/WiringPi/WiringPi.git /tmp/WiringPi && \
+RUN git clone https://github.com/WiringPi/WiringPi.git /tmp/WiringPi && \
     cd /tmp/WiringPi && \
     ./build debian && \
     mv debian-template/wiringpi_3.16_arm64.deb /tmp/wiringpi.deb && \
