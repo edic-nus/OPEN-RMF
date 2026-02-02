@@ -1,6 +1,8 @@
 # Lift Control Package
 
-A ROS2 package for controlling a two-level lift system using action servers and clients.
+A ROS2 package for controlling a two-level lift system using action servers and clients. To be noted is that this lift_control package is meant to be built on the Raspberry Pi for the lift. Attempts to build the package on remote PC would likely fail due to the dependency on the library WiringPi for GPIO control.
+
+A Docker configuration is also provided in the /Docker folder for other hardware configurations.
 
 ## Overview
 
@@ -15,8 +17,9 @@ lift_control/
 ├── action/
 │   └── Command.action          # Action definition
 ├── src/
-│   ├── lift_state.cpp          # Lift server node
-│   └── lift_command.cpp        # Lift client node
+│   ├── lift_state.cpp          # Lift server node (Simulation for testing: No hardware integration)
+│   └── lift_command.cpp        # Lift client node (Action Client for testing)
+│   └── lift_rpi.cpp            # Actual lift server node (Integrated with Raspberry Pi GPIO)
 ├── CMakeLists.txt
 ├── package.xml
 └── README.md

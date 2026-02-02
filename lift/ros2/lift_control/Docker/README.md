@@ -84,169 +84,322 @@ lift_ws/
 └── README.md                     # This file
 ```
 
-### 3. Create Dev Container Configuration
-
-Create the `.devcontainer` directory and files:
-
-```bash
+### 3. Building the Container
+```
 cd ~/lift_ws
-mkdir -p .devcontainer
+
+# Build the Docker image (first time takes 10-15 minutes)
+docker compose build
+
+# You should see output ending with "Successfully tagged..."
 ```
 
-Copy the three dev container files into `.devcontainer/`:
-- `devcontainer.json`
-- `Dockerfile` (development version)
-- `docker-compose.yml` (development version)
-
----
-
-## Development Container Setup
-
-The dev container includes:
-- **ROS2 Humble** - Full ROS2 environment
-- **WiringPi 3.x** - Built from source for Raspberry Pi 5 support
-- **Development Tools** - GDB, Valgrind, clang-format, editors
-- **VS Code Extensions** - C/C++, Python, ROS, CMake tools
-- **ROS_DOMAIN_ID=30** - Pre-configured for network isolation
-
-### Dev Container Features
-
-| Feature | Description |
-|---------|-------------|
-| **Live Code Sync** | Changes reflect immediately without rebuild |
-| **Full GPIO Access** | Direct access to Raspberry Pi GPIO pins |
-| **Debugging Tools** | GDB, Valgrind for memory debugging |
-| **Code Formatting** | clang-format, clang-tidy, Python linters |
-| **Bash History** | Persisted across container restarts |
-| **Host Networking** | ROS2 nodes visible on network |
-
----
-
-## Remote Development via SSH
-
-### Step 1: Connect to Raspberry Pi via SSH in VS Code
-
-1. **Open VS Code on your local machine**
-
-2. **Press `F1` or `Ctrl+Shift+P`** to open command palette
-
-3. **Type and select:** `Remote-SSH: Connect to Host...`
-
-4. **Enter your Raspberry Pi connection:**
-   ```
-   pi@<raspberry-pi-ip>
-   ```
-   Or if you have SSH config:
-   ```
-   your-pi-hostname
-   ```
-
-5. **Enter your password** when prompted
-
-6. **Wait for VS Code to connect** - A new VS Code window will open
-
-### Step 2: Open the Workspace
-
-1. **In the remote VS Code window:**
-   - Click "Open Folder"
-   - Navigate to `/home/pi/lift_ws`
-   - Click "OK"
-
-### Step 3: Reopen in Dev Container
-
-1. **VS Code should detect the `.devcontainer` folder** and show a notification:
-   > "Folder contains a Dev Container configuration file. Reopen folder to develop in a container"
-
-2. **Click "Reopen in Container"**
-   
-   Or manually:
-   - Press `F1` or `Ctrl+Shift+P`
-   - Type: `Dev Containers: Reopen in Container`
-   - Press Enter
-
-3. **Wait for the container to build** (first time takes 10-15 minutes)
-   - You can click "Show Log" to see build progress
-   - The container is built on the Raspberry Pi
-
-4. **Once complete**, you're now developing inside the container!
-
-### Step 4: Verify Setup
-
-Open a terminal in VS Code (`Ctrl+` ` or Terminal → New Terminal):
+### 4.Running the Lift Controller
 
 ```bash
-# Check ROS2
-ros2 --version
-# Output: ros2 doctor 0.10.3
+docker compose up
+```
+Press `Ctrl+C` to stop.
 
-# Check ROS_DOMAIN_ID
-echo $ROS_DOMAIN_ID
-# Output: 30
 
-# Check WiringPi
-gpio -v
-# Output: gpio version: 3.16_arm64
+### Verify Operation
 
-# Check GPIO access
-gpio readall
-# Should show GPIO pin layout
+```bash
+# Check if container is running
+docker ps
 
-# Check workspace
-pwd
-# Output: /root/lift_ws
+# Should show a container named "lift_rpi_node"
+
+# View logs
+docker compose logs -f
+
+# Press Ctrl+C to exit log view (container keeps running)
 ```
 
 ---
 
-## Building and Running
+## Operating the Lift
 
-### Build the Workspace
+### Using TurtleBot3 Teleop (if installed)
+
+If you have the teleop package installed on the Raspberry Pi or another machine:
 
 ```bash
-# Navigate to workspace
-cd /root/lift_ws
-
-# Build (using alias)
-cb
-
-# Or full command
-colcon build --symlink-install
-
-# Source the workspace
-source install/setup.bash
-# Or use alias
-source_ws
+# On Raspberry Pi or remote machine with ROS2
+export ROS_DOMAIN_ID=30
+export TURTLEBOT3_MODEL=burger
+ros2 run tb3_lift_teleop teleop_keyboard
 ```
 
-### Run the Lift Controller Node
+**Keyboard Controls:**
+- `q` - Move lift up
+- `e` - Move lift down
+- `r` - Emergency stop (stops at current position)
+- `t` - Cancel current movement
 
-**Terminal 1 - Run the node:**
-```bash
-ros2 run lift_control lift_rpi
-```
+### Using ROS2 Action Commands
 
-**Terminal 2 - Monitor status:**
-```bash
-ros2 topic echo /lift_state
-```
+From any machine on the same network with ROS2 installed:
 
-**Terminal 3 - Send commands:**
 ```bash
-# Move up
+# Set the domain ID to match the lift controller
+export ROS_DOMAIN_ID=30
+
+# Move lift up
 ros2 action send_goal /lift_action lift_control/action/Command "{command: 1}"
 
-# Move down
+# Move lift down
 ros2 action send_goal /lift_action lift_control/action/Command "{command: 2}"
 
-# Stop
+# Stop lift
 ros2 action send_goal /lift_action lift_control/action/Command "{command: 0}"
 ```
 
-### Using Multiple Terminals in VS Code
+### Command Reference
 
-You can split terminals for easier workflow:
-1. Open terminal (`Ctrl+` `)
-2. Click the split icon (⊞) in the terminal panel
-3. Or use `Ctrl+Shift+5` to split terminal
+| Command | Value | Description |
+|---------|-------|-------------|
+| GO_UP | 1 | Move lift to upper level |
+| GO_DOWN | 2 | Move lift to lower level |
+| STOP | 0 | Stop at current position |
 
 ---
+
+## Monitoring
+
+### Check Lift Status
+
+```bash
+# View current status (published every 2 seconds)
+export ROS_DOMAIN_ID=30
+ros2 topic echo /lift_state
+```
+
+**Status Codes:**
+- `001: Stationary at First Level` - At lower level (ground)
+- `100: Stationary at Second Level` - At upper level
+- `010: Stationary Between Levels` - Stopped between levels
+- `011: Moving to First Level` - Moving down
+- `110: Moving to Second Level` - Moving up
+
+### View Container Logs
+
+```bash
+# View recent logs
+docker compose logs
+
+# Follow logs in real-time
+docker compose logs -f
+
+# View last 50 lines
+docker compose logs --tail=50
+```
+
+### Check Container Status
+
+```bash
+# List running containers
+docker ps
+
+# View container resource usage
+docker stats lift_rpi_node
+
+# Check container health
+docker inspect lift_rpi_node | grep Status
+```
+
+---
+
+## Troubleshooting
+
+### Container Won't Start
+
+**Check logs:**
+```bash
+docker compose logs
+```
+
+**Common issues:**
+
+1. **WiringPi initialization failed**
+   ```bash
+   # Verify GPIO access
+   ls -l /dev/gpiomem
+   ls -l /dev/mem
+   
+   # Should show: crw-rw---- with gpio group
+   ```
+
+2. **Container exits immediately**
+   ```bash
+   # Check for build errors
+   docker compose build --no-cache
+   
+   # Verify docker-compose.yml exists
+   ls -l docker-compose.yml
+   ```
+
+3. **Port or resource conflicts**
+   ```bash
+   # Stop all containers
+   docker compose down
+   
+   # Remove old containers
+   docker container prune
+   
+   # Restart
+   docker compose up -d
+   ```
+
+### Lift Not Responding
+
+**Check if action server is running:**
+```bash
+export ROS_DOMAIN_ID=30
+ros2 action list
+# Should show: /lift_action
+```
+
+**Check if nodes are visible:**
+```bash
+export ROS_DOMAIN_ID=30
+ros2 node list
+# Should show: /lift_state
+```
+
+**Verify network connectivity:**
+```bash
+# On Raspberry Pi
+hostname -I
+# Note the IP address
+
+# On remote machine
+ping <raspberry-pi-ip>
+```
+
+### GPIO Not Working
+
+**Verify privileged mode:**
+```bash
+docker inspect lift_rpi_node | grep Privileged
+# Should show: "Privileged": true
+```
+
+**Check device mounts:**
+```bash
+docker inspect lift_rpi_node | grep -A 10 Devices
+# Should show /dev/gpiomem and /dev/mem
+```
+
+**Test GPIO inside container:**
+```bash
+docker exec -it lift_rpi_node gpio readall
+# Should display GPIO pin layout
+```
+
+### ROS_DOMAIN_ID Mismatch
+
+If you can't see the lift node from other machines:
+
+```bash
+# Check environment variable
+docker exec -it lift_rpi_node printenv | grep ROS_DOMAIN_ID
+# Should show: ROS_DOMAIN_ID=30
+
+# On all machines accessing the lift, ensure:
+export ROS_DOMAIN_ID=30
+```
+
+---
+
+## Maintenance
+
+### Stopping the Lift Controller
+
+```bash
+cd ~/lift_ws
+
+# Stop gracefully
+docker compose down
+
+# Lift will decelerate and stop safely
+```
+
+### Restarting the Lift Controller
+
+```bash
+cd ~/lift_ws
+
+# Restart
+docker compose restart
+
+# Or stop and start
+docker compose down
+docker compose up -d
+```
+
+### Updating the Software
+
+```bash
+cd ~/lift_ws
+
+# Pull latest code (if using git)
+git pull
+
+# Rebuild container
+docker compose build
+
+# Restart with new image
+docker compose down
+docker compose up -d
+```
+
+### Viewing Resource Usage
+
+```bash
+# Real-time resource monitoring
+docker stats lift_rpi_node
+
+# Disk usage
+docker system df
+```
+
+### Cleaning Up Old Images
+
+```bash
+# Remove unused images
+docker image prune
+
+# Remove all unused resources
+docker system prune
+```
+
+---
+
+## Auto-Start on Boot
+
+To make the lift controller start automatically when the Raspberry Pi boots:
+
+### Method 1: Using Docker Restart Policy (Already Configured)
+
+The `docker-compose.yml` includes `restart: unless-stopped`, which means:
+- Container starts automatically on boot
+- Container restarts if it crashes
+- Container stays stopped if manually stopped
+
+**Enable Docker service:**
+```bash
+sudo systemctl enable docker
+```
+
+**Test auto-start:**
+```bash
+# Start the container
+docker compose up -d
+
+# Reboot
+sudo reboot
+
+# After reboot, check if running
+docker ps
+```
