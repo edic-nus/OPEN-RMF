@@ -1,6 +1,6 @@
 # TurtleBot3 Lift Teleop
 
-A ROS 2 teleoperation package for controlling TurtleBot3 robots with lift mechanisms using keyboard input.
+A ROS 2 teleoperation package for controlling TurtleBot3 robots with lift mechanisms using keyboard input. tb3_lift_teleop requires the lift_control package to work. However, if building the lift_control package on remote PC (not Raspberry Pi), delete lift_rpi.cpp and its mentions from package.xml and CMakeLists.txt
 
 ## Features
 
