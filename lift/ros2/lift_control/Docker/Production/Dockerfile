@@ -13,13 +13,15 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     python3-pip \
     python3-colcon-common-extensions \
+    gettext-base \
+    fakeroot \
     && rm -rf /var/lib/apt/lists/*
 
 # Install WiringPi manually from source
 RUN git clone https://github.com/WiringPi/WiringPi.git /tmp/WiringPi && \
     cd /tmp/WiringPi && \
     ./build debian && \
-    mv debian-template/wiringpi_3.16_arm64.deb /tmp/wiringpi.deb && \
+    mv debian-template/wiringpi_*.deb /tmp/wiringpi.deb && \
     apt-get update && \
     apt install -y /tmp/wiringpi.deb && \
     rm -rf /tmp/WiringPi /tmp/wiringpi.deb && \
