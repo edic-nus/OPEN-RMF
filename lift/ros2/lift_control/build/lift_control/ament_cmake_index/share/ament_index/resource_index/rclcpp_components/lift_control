@@ -1,0 +1,4 @@
+PLUGIN;lib/libaction_server.so
+lift_control::Lift_State;lib/libaction_server.so
+EXECUTABLE;lib/libaction_server.so
+lift_state;lib/libaction_server.so

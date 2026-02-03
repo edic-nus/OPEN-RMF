@@ -1,0 +1,260 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-8d6934a38ef6b36a5049.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20
+					]
+				},
+				{
+					"build" : "lift_control__py",
+					"jsonFile" : "directory-lift_control__py-3ed673d6ea9e4a6a3b0d.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "build/lift_control/lift_control__py",
+					"targetIndexes" : 
+					[
+						6
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1
+					],
+					"name" : "lift_control",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "action_server::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-action_server-d7eb405feb975e689bb3.json",
+					"name" : "action_server",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ament_cmake_python_build_lift_control_egg::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ament_cmake_python_build_lift_control_egg-50b3a887fe1d3274fcb8.json",
+					"name" : "ament_cmake_python_build_lift_control_egg",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ament_cmake_python_copy_lift_control::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ament_cmake_python_copy_lift_control-bef90e1ba0a68e9dee02.json",
+					"name" : "ament_cmake_python_copy_lift_control",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_command::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_command-16f93159aa431c016bec.json",
+					"name" : "lift_command",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control-179d013698de2ef5ab1b.json",
+					"name" : "lift_control",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__cpp-33db275251cd4c077920.json",
+					"name" : "lift_control__cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "lift_control__py::@9ec6e089150601ab306a",
+					"jsonFile" : "target-lift_control__py-2b35067d80f529d22bd0.json",
+					"name" : "lift_control__py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__rosidl_generator_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__rosidl_generator_c-678a69416fa923a67833.json",
+					"name" : "lift_control__rosidl_generator_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__rosidl_generator_py::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__rosidl_generator_py-eb0756551572162523cb.json",
+					"name" : "lift_control__rosidl_generator_py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__rosidl_typesupport_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__rosidl_typesupport_c-c0f56e8001721b80e88b.json",
+					"name" : "lift_control__rosidl_typesupport_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__rosidl_typesupport_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__rosidl_typesupport_c__pyext-d415f59058d2bcd46fed.json",
+					"name" : "lift_control__rosidl_typesupport_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__rosidl_typesupport_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__rosidl_typesupport_cpp-d99067fbd314fbe8c79e.json",
+					"name" : "lift_control__rosidl_typesupport_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__rosidl_typesupport_fastrtps_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__rosidl_typesupport_fastrtps_c-66490ab61f89a43658b6.json",
+					"name" : "lift_control__rosidl_typesupport_fastrtps_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__rosidl_typesupport_fastrtps_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__rosidl_typesupport_fastrtps_c__pyext-3108ebfe5eb2c873cf5c.json",
+					"name" : "lift_control__rosidl_typesupport_fastrtps_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__rosidl_typesupport_fastrtps_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__rosidl_typesupport_fastrtps_cpp-4779abfd065086eaf07b.json",
+					"name" : "lift_control__rosidl_typesupport_fastrtps_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__rosidl_typesupport_introspection_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__rosidl_typesupport_introspection_c-a95d64f534ef737c0428.json",
+					"name" : "lift_control__rosidl_typesupport_introspection_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__rosidl_typesupport_introspection_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__rosidl_typesupport_introspection_c__pyext-4ddca7feeff4f9760e6a.json",
+					"name" : "lift_control__rosidl_typesupport_introspection_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control__rosidl_typesupport_introspection_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control__rosidl_typesupport_introspection_cpp-c91a3e39616101a9134f.json",
+					"name" : "lift_control__rosidl_typesupport_introspection_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_control_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_control_uninstall-efb54fb281661ffeb22d.json",
+					"name" : "lift_control_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lift_state::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lift_state-e85d4745bf482a4349a8.json",
+					"name" : "lift_state",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-ea240355c499e8dec123.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/jason/lift_ws/src/lift_control/build/lift_control",
+		"source" : "/home/jason/lift_ws/src/lift_control"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

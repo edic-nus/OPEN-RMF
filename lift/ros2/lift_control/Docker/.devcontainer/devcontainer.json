@@ -1,0 +1,64 @@
+{
+  "name": "ROS2 Humble Lift Controller",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "lift_dev",
+  "workspaceFolder": "/root/lift_ws",
+  
+  // Set the user for VS Code
+  "remoteUser": "root",
+  
+  // Features to add to the dev container
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "root"
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    }
+  },
+  
+  // Configure tool-specific properties
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-python.python",
+        "ms-iot.vscode-ros",
+        "twxs.cmake",
+        "ms-vscode.cmake-tools",
+        "redhat.vscode-xml",
+        "dotjoshjohnson.xml",
+        "streetsidesoftware.code-spell-checker",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash",
+        "cmake.configureOnOpen": false,
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "C_Cpp.default.intelliSenseMode": "linux-gcc-arm64",
+        "ros.distro": "humble"
+      }
+    }
+  },
+  
+  // Use 'forwardPorts' to make a list of ports inside the container available locally
+  "forwardPorts": [],
+  
+  // Use 'postCreateCommand' to run commands after the container is created
+  "postCreateCommand": "echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc && echo 'source /root/lift_ws/install/setup.bash' >> ~/.bashrc && echo 'export ROS_DOMAIN_ID=30' >> ~/.bashrc",
+  
+  // Use 'postStartCommand' to run commands after the container starts
+  "postStartCommand": "source /opt/ros/humble/setup.bash && source /root/lift_ws/install/setup.bash",
+  
+  // Uncomment to connect as root instead
+  // "remoteUser": "root",
+  
+  // Mount the workspace
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/root/lift_ws/src/lift_control,type=bind,consistency=cached"
+  ]
+}

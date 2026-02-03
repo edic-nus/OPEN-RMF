@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  lift_rpi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lift_rpi_node
+    privileged: true
+    devices:
+      - /dev/gpiomem:/dev/gpiomem
+      - /dev/mem:/dev/mem
+    volumes:
+      - /sys:/sys
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      - ROS_DOMAIN_ID=30
+    command: ros2 run lift_control lift_rpi

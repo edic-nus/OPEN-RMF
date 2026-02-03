@@ -1,0 +1,18 @@
+// generated from rosidl_adapter/resource/action.idl.em
+// with input from lift_control/action/Command.action
+// generated code does not contain a copyright notice
+
+
+module lift_control {
+  module action {
+    struct Command_Goal {
+      int32 command;
+    };
+    struct Command_Result {
+      int32 completion;
+    };
+    struct Command_Feedback {
+      int32 status;
+    };
+  };
+};

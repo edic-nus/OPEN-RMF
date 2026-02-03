@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  lift_dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: lift_dev_container
+    privileged: true
+    devices:
+      - /dev/gpiomem:/dev/gpiomem
+      - /dev/mem:/dev/mem
+    volumes:
+      - ../:/root/lift_ws/src/lift_control:cached
+      - /sys:/sys
+      # Persist bash history
+      - devcontainer-bashhistory:/root/bash_history
+    network_mode: host
+    environment:
+      - ROS_DOMAIN_ID=30
+    command: sleep infinity
+    stdin_open: true
+    tty: true
+
+volumes:
+  devcontainer-bashhistory:

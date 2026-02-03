@@ -1,0 +1,6 @@
+{
+  "package_name": "lift_control",
+  "non_idl_tuples": [
+    "/home/jason/lift_ws/src/lift_control:action/Command.action"
+  ]
+}
